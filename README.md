@@ -14,10 +14,6 @@ This library relies upon:
 
 You will need to download and install these yourself, and make sure they are on path (see "startOxfordFace.m").
 
-So far, I've implemented support for the basic face detection and registration ONLY.
-
-Known bug:
-- Landmarks aren't returned for some reason.
 
 Patches and pull requests are welcome.
 

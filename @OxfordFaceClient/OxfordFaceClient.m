@@ -4,7 +4,7 @@ classdef OxfordFaceClient < handle
     end
     
     properties (Constant)
-        OXFORD_INSTANCE = 'https://api.projectoxford.ai/face/v0/detections'; 
+        OXFORD_INSTANCE = 'https://api.projectoxford.ai/face/v0/'; 
     end
     
     methods (Access = public)

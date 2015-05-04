@@ -1,22 +1,45 @@
+% faceDetect - Call basic face detection and registration from Project
+% Oxford.
+%
+% Input: 
+%       image -> path to image (local or URL to remote image)
+%
+% The following are flags which turn on requests for various information
+% about the face. If all are false, only the bounding box info is returned.
+%       landmarksFlag -> return full landmark registration
+%       ageFlag -> return estimated age
+%       genderFlag -> return estimated gender
+%       poseFlag -> return head pose information
+%
+% Output:
+%       faces -> cell array containing structures with metadata for each
+%       face.
+
 function faces = faceDetect(obj, image, landmarksFlag, ageFlag, genderFlag, poseFlag)
-    % image files are read in as binary. Eventually we should also be able
-    % to pass a URL rather than just a local file.
-    body = util.readImFile(image);
-    header = http_createHeader('Content-Type', 'application/octet-stream');
-    params = {'analyzesFaceLandmarks', util.logical2str(landmarksFlag), ...
+    if (ischar(image))
+        if (util.isURL(image))
+            % if we're pointing to a remote image, send as JSON
+            body = savejson([], struct('url', image));
+            header = http_createHeader('Content-Type', 'application/json');
+        else
+            % if we're pointing to a local file, we can't use imread(). API
+            % specifies that we need to send the image as a binary blob.
+            body = util.readImFile(image);
+            header = http_createHeader('Content-Type', 'application/octet-stream');
+        end
+    else
+        error('image should be a file path or URL.');
+    end
+    
+    params = {'analyzesFacialLandmarks', util.logical2str(landmarksFlag), ...
               'analyzesAge', util.logical2str(ageFlag), ...
               'analyzesGender', util.logical2str(genderFlag), ...
               'analyzesHeadPose', util.logical2str(poseFlag), ...
               'subscription-key', obj.API_KEY};
-    urlToHit = [obj.OXFORD_INSTANCE '?' http_paramsToString(params)];
+    urlToHit = [obj.OXFORD_INSTANCE '/detections?' http_paramsToString(params)];
     [respOutput, respExtra] = urlread2(urlToHit, 'POST', body, header);
     faces = handleResponse(respOutput, respExtra);
 end
-
-% urlread2 has it's own error handling in situations where the request
-% itself fails. This function handles the response from
-% urlread2 assuming it has been succesful in that something has come back.
-% These response codes are as per the documentation.
 
 function faces = handleResponse(resp, extra)
     if (extra.status.value == 200)
